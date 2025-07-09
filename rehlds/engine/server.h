@@ -81,6 +81,8 @@ enum
 	MSG_FL_PVS			= BIT(1),	// Send to PVS
 	MSG_FL_PAS			= BIT(2),	// Send to PAS
 	MSG_FL_ONE			= BIT(7),	// Send to single client
+	MSG_FL_PVS_LOS		= BIT(8),	// Send to PVS with LOS
+	MSG_FL_PVS_EXCEPT	= BIT(9),	// Send to PVS except one client
 };
 
 const int RESOURCE_INDEX_BITS = 12;

@@ -1268,25 +1268,25 @@ void EXT_FUNC EV_Playback(int flags, const edict_t *pInvoker, unsigned short eve
 		if (!cl->active || !cl->spawned || !cl->connected || !cl->fully_connected || cl->fakeclient)
 			continue;
 
-		if (pInvoker)
-		{
-			if (pInvoker->v.groupinfo)
-			{
-				if (cl->edict->v.groupinfo)
-				{
-					if (g_groupop)
-					{
-						if (g_groupop == GROUP_OP_NAND && (cl->edict->v.groupinfo & pInvoker->v.groupinfo))
-							continue;
-					}
-					else
-					{
-						if (!(cl->edict->v.groupinfo & pInvoker->v.groupinfo))
-							continue;
-					}
-				}
-			}
-		}
+		//if (pInvoker)
+		//{
+		//	if (pInvoker->v.groupinfo)
+		//	{
+		//		if (cl->edict->v.groupinfo)
+		//		{
+		//			if (g_groupop)
+		//			{
+		//				if (g_groupop == GROUP_OP_NAND && !(cl->edict->v.groupinfo & pInvoker->v.groupinfo))
+		//					continue;
+		//			}
+		//			else
+		//			{
+		//				if ((cl->edict->v.groupinfo & pInvoker->v.groupinfo))
+		//					continue;
+		//			}
+		//		}
+		//	}
+		//}
 
 		if (pInvoker && !(flags & FEV_GLOBAL))
 		{
@@ -2097,6 +2097,15 @@ sizebuf_t* EXT_FUNC WriteDest_Parm(int dest)
 		return &g_psv.reliable_datagram;
 	case MSG_PVS:
 	case MSG_PAS:
+	case MSG_PVS_LOS:
+		return &g_psv.multicast;
+	case MSG_PVS_EXCEPT:
+		entnum = NUM_FOR_EDICT(gMsgEntity);
+		if (entnum <= 0 || entnum > g_psvs.maxclients)
+		{
+			Host_Error("%s: not a client", __func__);
+		}
+
 		return &g_psv.multicast;
 	case MSG_SPEC:
 		return &g_psv.spectator;
@@ -2107,7 +2116,7 @@ sizebuf_t* EXT_FUNC WriteDest_Parm(int dest)
 
 void EXT_FUNC PF_MessageBegin_I(int msg_dest, int msg_type, const float *pOrigin, edict_t *ed)
 {
-	if (msg_dest == MSG_ONE || msg_dest == MSG_ONE_UNRELIABLE)
+	if (msg_dest == MSG_ONE || msg_dest == MSG_ONE_UNRELIABLE || msg_dest == MSG_PVS_EXCEPT)
 	{
 		if (!ed)
 			Sys_Error("%s: with no target entity\n", __func__);
@@ -2128,7 +2137,8 @@ void EXT_FUNC PF_MessageBegin_I(int msg_dest, int msg_type, const float *pOrigin
 	gMsgType = msg_type;
 	gMsgEntity = ed;
 	gMsgDest = msg_dest;
-	if (msg_dest == MSG_PVS || msg_dest == MSG_PAS)
+
+	if (msg_dest == MSG_PVS || msg_dest == MSG_PAS || msg_dest == MSG_PVS_LOS || msg_dest == MSG_PVS_EXCEPT)
 	{
 		if (pOrigin)
 		{
@@ -2207,7 +2217,7 @@ void EXT_FUNC PF_MessageEnd_I(void)
 
 // With `REHLDS_FIXES` enabled meaning of `svc_startofusermessages` changed a bit: now it is an id of the first user message
 #ifdef REHLDS_FIXES
-		if (gMsgType >= svc_startofusermessages && (gMsgDest == MSG_ONE || gMsgDest == MSG_ONE_UNRELIABLE))
+		if (gMsgType >= svc_startofusermessages && ((gMsgDest == MSG_ONE || gMsgDest == MSG_ONE_UNRELIABLE || gMsgDest == MSG_PVS_EXCEPT)))
 #else // REHLDS_FIXES
 		if (gMsgType > svc_startofusermessages && (gMsgDest == MSG_ONE || gMsgDest == MSG_ONE_UNRELIABLE))
 #endif // REHLDS_FIXES
@@ -2264,6 +2274,14 @@ void EXT_FUNC PF_MessageEnd_I(void)
 
 	case MSG_PAS_R:
 		SV_Multicast((edict_t *)gMsgEntity, gMsgOrigin, MSG_FL_PAS, 1);
+		break;
+
+	case MSG_PVS_LOS:
+		SV_Multicast((edict_t*)gMsgEntity, gMsgOrigin, MSG_FL_PVS_LOS, 0);
+		break;
+
+	case MSG_PVS_EXCEPT:
+		SV_Multicast((edict_t*)gMsgEntity, gMsgOrigin, MSG_FL_PVS, 0);
 		break;
 
 	default:

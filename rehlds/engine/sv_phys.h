@@ -60,7 +60,7 @@ float SV_RecursiveWaterLevel(const vec_t *origin, float mins, float maxs, int de
 float SV_Submerged(edict_t *ent);
 void SV_Physics_None(edict_t *ent);
 void SV_Physics_Follow(edict_t *ent);
-void SV_Physics_Noclip(edict_t *ent);
+void SV_Physics_Noclip(edict_t *ent, qboolean touch_triggers);
 void SV_CheckWaterTransition(edict_t *ent);
 void SV_Physics_Toss(edict_t *ent);
 void PF_WaterMove(edict_t *pSelf);

@@ -1,4 +1,4 @@
-/*
+﻿/*
 *
 *    This program is free software; you can redistribute it and/or modify it
 *    under the terms of the GNU General Public License as published by the
@@ -895,7 +895,7 @@ qboolean SV_ValidClientMulticast(client_t *client, int soundLeaf, int to)
 	}
 
 	unsigned char* mask;
-	if (destination == MSG_FL_PVS)
+	if (destination == MSG_FL_PVS || destination == MSG_FL_PVS_LOS || destination == MSG_FL_PVS_EXCEPT)
 	{
 		mask = CM_LeafPVS(soundLeaf);
 	}
@@ -951,22 +951,32 @@ void SV_Multicast(edict_t *ent, vec_t *origin, int to, qboolean reliable)
 		if ((to & MSG_FL_ONE) && client == host_client)
 			continue;
 
-		if (ent && ent->v.groupinfo != 0 && client->edict->v.groupinfo != 0)
-		{
-			if (g_groupop)
-			{
-				if (g_groupop == GROUP_OP_NAND && (ent->v.groupinfo & client->edict->v.groupinfo))
-					continue;
-			}
-			else
-			{
-				if (!(ent->v.groupinfo & client->edict->v.groupinfo))
-					continue;
-			}
-		}
+		//if (ent && ent->v.groupinfo != 0 && client->edict->v.groupinfo != 0)
+		//{
+		//	if (g_groupop)
+		//	{
+		//		if (g_groupop == GROUP_OP_NAND && !(ent->v.groupinfo & client->edict->v.groupinfo))
+		//			continue;
+		//	}
+		//	else
+		//	{
+		//		if ((ent->v.groupinfo & client->edict->v.groupinfo))
+		//			continue;
+		//	}
+		//}
 
 		if (SV_ValidClientMulticast(client, leafnum, to))
 		{
+			if (to & MSG_FL_PVS_LOS && !SV_IsLOSWIthTolerance(client->edict->v.origin, origin, NULL))
+			{
+				continue;
+			}
+
+			if (to & MSG_FL_PVS_EXCEPT && client->edict == ent)
+			{
+				continue;
+			}
+
 			sizebuf_t *pBuffer = &client->netchan.message;
 			if (!reliable)
 				pBuffer = &client->datagram;

@@ -114,3 +114,5 @@ trace_t SV_Move(const vec_t *start, const vec_t *mins, const vec_t *maxs, const 
 #ifdef REHLDS_OPT_PEDANTIC
 trace_t SV_Move_Point(const vec_t *start, const vec_t *end, int type, edict_t *passedict);
 #endif // REHLDS_OPT_PEDANTIC
+
+qboolean SV_IsLOSWIthTolerance(const vec3_t start, const vec3_t end, edict_t* pIgnoreEnt);

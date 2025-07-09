@@ -538,12 +538,12 @@ void SV_AddLinksToPM_(areanode_t *node, float *pmove_mins, float *pmove_maxs)
 		{
 			if (g_groupop)
 			{
-				if (g_groupop == GROUP_OP_NAND && (check->v.groupinfo & sv_player->v.groupinfo))
+				if (g_groupop == GROUP_OP_NAND && !(check->v.groupinfo & sv_player->v.groupinfo))
 					continue;
 			}
 			else
 			{
-				if (!(check->v.groupinfo & sv_player->v.groupinfo))
+				if ((check->v.groupinfo & sv_player->v.groupinfo))
 					continue;
 			}
 		}

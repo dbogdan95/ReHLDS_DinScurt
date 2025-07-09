@@ -1306,7 +1306,7 @@ void Proxy::SendRcon(NetAddress *to, unsigned int challenge)
 		return;
 	}
 
-	m_Socket->OutOfBandPrintf(to, "rcon %u \"%s\" %s", challenge, m_RconPassword, m_LastRconCommand);
+	m_Socket->OutOfBandPrintf(to, "rcon %u \"%s\" %s", challenge, "********"/*m_RconPassword*/, m_LastRconCommand);
 }
 
 unsigned int Proxy::GetChallengeNumber(NetAddress *host)

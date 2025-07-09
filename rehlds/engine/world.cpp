@@ -337,19 +337,20 @@ void SV_TouchLinks(edict_t *ent, areanode_t *node)
 		if (touch == ent)
 			continue;
 
-		if (ent->v.groupinfo && touch->v.groupinfo)
-		{
-			if (g_groupop)
-			{
-				if (g_groupop == GROUP_OP_NAND && (ent->v.groupinfo & touch->v.groupinfo))
-					continue;
-			}
-			else
-			{
-				if (!(ent->v.groupinfo & touch->v.groupinfo))
-					continue;
-			}
-		}
+		// aici nu
+		//if (ent->v.groupinfo && touch->v.groupinfo)
+		//{
+		//	if (g_groupop)
+		//	{
+		//		if (g_groupop == GROUP_OP_NAND && !(ent->v.groupinfo & touch->v.groupinfo))
+		//			continue;
+		//	}
+		//	else
+		//	{
+		//		if ((ent->v.groupinfo & touch->v.groupinfo))
+		//			continue;
+		//	}
+		//}
 
 #ifdef REHLDS_FIXES
 		if ((ent->v.flags & FL_KILLME) || (touch->v.flags & FL_KILLME))
@@ -625,19 +626,20 @@ int SV_LinkContents(areanode_t *node, const vec_t *pos)
 			if (touch->v.solid != SOLID_NOT)
 				continue;
 
-			if (touch->v.groupinfo)
-			{
-				if (g_groupop)
-				{
-					if (g_groupop == GROUP_OP_NAND && (touch->v.groupinfo & g_groupmask))
-						continue;
-				}
-				else
-				{
-					if (!(touch->v.groupinfo & g_groupmask))
-						continue;
-				}
-			}
+			// aici nu
+			//if (touch->v.groupinfo)
+			//{
+			//	if (g_groupop)
+			//	{
+			//		if (g_groupop == GROUP_OP_NAND && !(touch->v.groupinfo & g_groupmask))
+			//			continue;
+			//	}
+			//	else
+			//	{
+			//		if ((touch->v.groupinfo & g_groupmask))
+			//			continue;
+			//	}
+			//}
 
 			if (Mod_GetType(touch->v.modelindex) != mod_brush)
 				continue;
@@ -1160,19 +1162,20 @@ void SV_ClipToLinks(areanode_t *node, moveclip_t *clip)
 		next = l->next;
 		touch = EDICT_FROM_AREA(l);
 
-		if (touch->v.groupinfo && clip->passedict && clip->passedict->v.groupinfo)
-		{
-			if (g_groupop)
-			{
-				if (g_groupop == GROUP_OP_NAND && (clip->passedict->v.groupinfo & touch->v.groupinfo))
-					continue;
-			}
-			else
-			{
-				if (!(clip->passedict->v.groupinfo & touch->v.groupinfo))
-					continue;
-			}
-		}
+		// aici nu
+		//if (touch->v.groupinfo && clip->passedict && clip->passedict->v.groupinfo)
+		//{
+		//	if (g_groupop)
+		//	{
+		//		if (g_groupop == GROUP_OP_NAND && !(clip->passedict->v.groupinfo & touch->v.groupinfo))
+		//			continue;
+		//	}
+		//	else
+		//	{
+		//		if ((clip->passedict->v.groupinfo & touch->v.groupinfo))
+		//			continue;
+		//	}
+		//}
 
 		if (touch->v.solid == SOLID_NOT || touch == clip->passedict)
 			continue;
@@ -1535,3 +1538,36 @@ trace_t SV_Move_Point(const vec_t *start, const vec_t *end, int type, edict_t *p
 }
 
 #endif // REHLDS_OPT_PEDANTIC
+
+qboolean SV_IsLOSWIthTolerance(const vec3_t start, const vec3_t end, edict_t* pIgnoreEnt)
+{
+	const float radius = 32; 
+	const int numRays = 8; 
+
+	for (int i = 0; i < numRays; ++i)
+	{
+		vec3_t offset;
+		offset[0] = cosf(i * (2.0f * M_PI / numRays)) * radius;
+		offset[1] = sinf(i * (2.0f * M_PI / numRays)) * radius;
+		offset[2] = 0.0f;
+
+		vec3_t newStart, newEnd;
+		VectorAdd(start, offset, newStart);
+		VectorAdd(end, offset, newEnd);
+
+		trace_t trace = SV_Move_Point(newStart, newEnd, 1, pIgnoreEnt);
+
+		if (trace.fraction == 1.0f)
+		{
+			return TRUE;
+		}
+
+		const char* sTexture = TraceTexture(trace.ent, newStart, newEnd);
+		if (sTexture && sTexture[0] == '{')
+		{
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}

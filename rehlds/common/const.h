@@ -103,6 +103,8 @@
 #define MOVETYPE_BOUNCEMISSILE	11		// bounce w/o gravity
 #define MOVETYPE_FOLLOW			12		// track movement of aiment
 #define MOVETYPE_PUSHSTEP		13		// BSP model that needs physics/world collisions (uses nearest hull for world collision)
+#define MOVETYPE_NOCLIP_TRIGGER 14		// No gravity, no collisions, but still do velocity/avelocity and trigger touch functions
+#define MOVETYPE_BULLETPHYSICS  15		// Bullet physics
 
 // edict->solid values
 // NOTE: Some movetypes will cause collisions independent of SOLID_NOT/SOLID_TRIGGER when the entity moves
@@ -601,6 +603,8 @@
 #define MSG_PAS_R			7		// Reliable to PAS
 #define MSG_ONE_UNRELIABLE	8		// Send to one client, but don't put in reliable stream, put in unreliable datagram ( could be dropped )
 #define MSG_SPEC			9		// Sends to all spectator proxies
+#define MSG_PVS_LOS			10		// Ents in PVS of org with LOS
+#define MSG_PVS_EXCEPT 		11		// Reliable to PVS except the client
 
 // contents of a spot in the world
 #define CONTENTS_EMPTY		-1

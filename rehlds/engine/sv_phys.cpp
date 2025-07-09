@@ -147,19 +147,19 @@ void SV_Impact(edict_t *e1, edict_t *e2, trace_t *ptrace)
 	if ((e1->v.flags & FL_KILLME) || (e2->v.flags & FL_KILLME))
 		return;
 
-	if (e1->v.groupinfo && e2->v.groupinfo)
-	{
-		if (g_groupop)
-		{
-			if (g_groupop == GROUP_OP_NAND && (e1->v.groupinfo & e2->v.groupinfo))
-				return;
-		}
-		else
-		{
-			if (!(e1->v.groupinfo & e2->v.groupinfo))
-				return;
-		}
-	}
+	//if (e1->v.groupinfo && e2->v.groupinfo)
+	//{
+	//	if (g_groupop)
+	//	{
+	//		if (g_groupop == GROUP_OP_NAND && !(e1->v.groupinfo & e2->v.groupinfo))
+	//			return;
+	//	}
+	//	else
+	//	{
+	//		if ((e1->v.groupinfo & e2->v.groupinfo))
+	//			return;
+	//	}
+	//}
 
 	if (e1->v.solid != SOLID_NOT)
 	{
@@ -956,7 +956,7 @@ void SV_Physics_Follow(edict_t *ent)
 }
 
 // A moving object that doesn't obey physics
-void SV_Physics_Noclip(edict_t *ent)
+void SV_Physics_Noclip(edict_t *ent, qboolean touch_triggers)
 {
 	// regular thinking
 	if (!SV_RunThink(ent))
@@ -965,8 +965,20 @@ void SV_Physics_Noclip(edict_t *ent)
 	VectorMA(ent->v.origin, host_frametime, ent->v.velocity, ent->v.origin);
 	VectorMA(ent->v.angles, host_frametime, ent->v.avelocity, ent->v.angles);
 
-	// noclip ents never touch triggers
-	SV_LinkEdict(ent, FALSE);
+	SV_LinkEdict(ent, touch_triggers);
+
+	if (touch_triggers)
+	{
+		vec3_t move;
+		VectorScale(ent->v.velocity, host_frametime, move);
+
+		trace_t trace = SV_PushEntity(ent, move);
+
+		//if (trace.ent)
+		//{
+		//	SV_Impact(ent, trace.ent, &trace);
+		//}
+	}
 }
 
 void SV_CheckWaterTransition(edict_t *ent)
@@ -1505,7 +1517,10 @@ void SV_Physics()
 			SV_Physics_Follow(ent);
 			break;
 		case MOVETYPE_NOCLIP:
-			SV_Physics_Noclip(ent);
+			SV_Physics_Noclip(ent, FALSE);
+			break;
+		case MOVETYPE_NOCLIP_TRIGGER:
+			SV_Physics_Noclip(ent, TRUE);
 			break;
 		case MOVETYPE_STEP:
 		case MOVETYPE_PUSHSTEP:
