@@ -174,6 +174,7 @@ set(ENGINE_SRCS
 	engine/snd_null.cpp
 	engine/sse_mathfun.cpp
 	engine/public_amalgamation.cpp
+	engine/BulletWorld.cpp
 	rehlds/flight_recorder.cpp
 	rehlds/FlightRecorderImpl.cpp
 	rehlds/hookchains_impl.cpp
@@ -223,8 +224,9 @@ if (CMAKE_BUILD_TYPE MATCHES Unittests)
 	add_executable(engine ${appversion.sh} ${ENGINE_SRCS})
 	target_link_libraries(engine PRIVATE cppunitlite)
 else()
-	add_library(engine SHARED ${appversion.sh} ${ENGINE_SRCS})
+	add_library(engine SHARED ${appversion.sh} ${ENGINE_SRCS} "engine/BulletUtils.h")
 endif()
+
 
 if (NOT TARGET bzip2)
 	add_subdirectory(../dep/bzip2 bzip2)
@@ -241,6 +243,7 @@ target_include_directories(engine PRIVATE
 	${PROJECT_BZIP2_DIR}
 	${PROJECT_CPPUNITLITE_DIR}
 	${PROJECT_PUBLIC_DIR}
+	${PROJECT_SOURCE_DIR}/../extern/bullet/src
 )
 
 target_compile_definitions(engine PRIVATE
@@ -252,6 +255,7 @@ target_compile_definitions(engine PRIVATE
 	REHLDS_API
 	REHLDS_SELF
 	REHLDS_OPT_PEDANTIC
+	USE_BULLET_PHYSICS
 	HAVE_OPT_STRTOOLS
 	USE_BREAKPAD_HANDLER
 	_LINUX
@@ -284,6 +288,15 @@ target_link_libraries(engine PRIVATE
 	bzip2
 	steam_api
 )
+
+if (USE_BULLET_PHYSICS)
+	target_link_libraries(engine PRIVATE
+		${PROJECT_SOURCE_DIR}/../extern/bullet/build32/src/BulletDynamics/libBulletDynamics.a
+		${PROJECT_SOURCE_DIR}/../extern/bullet/build32/src/BulletCollision/libBulletCollision.a
+		${PROJECT_SOURCE_DIR}/../extern/bullet/build32/src/LinearMath/libLinearMath.a
+	)
+endif()
+
 
 if (USE_STATIC_LIBSTDC)
 	target_compile_definitions(engine PRIVATE BUILD_STATIC_LIBSTDC)

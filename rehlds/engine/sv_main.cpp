@@ -6428,6 +6428,11 @@ int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot)
 	Q_snprintf(g_psv.modelname, sizeof(g_psv.modelname), "maps/%s.bsp", server);
 	g_psv.worldmodel = Mod_ForName(g_psv.modelname, FALSE, FALSE);
 
+#if USE_BULLET_PHYSICS
+	BulletWorld::Instance().Init();
+	BulletWorld::BuildBulletCollisionFromBSP(g_psv.worldmodel);
+#endif
+
 	if (!g_psv.worldmodel)
 	{
 		Con_Printf("Couldn't spawn server %s\n", g_psv.modelname);

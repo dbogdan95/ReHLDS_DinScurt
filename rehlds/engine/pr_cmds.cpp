@@ -2651,15 +2651,50 @@ const char* EXT_FUNC PF_GetPhysicsKeyValue(const edict_t *pClient, const char *k
 	return Info_ValueForKey(client->physinfo, key);
 }
 
-void EXT_FUNC PF_SetPhysicsKeyValue(const edict_t *pClient, const char *key, const char *value)
+void EXT_FUNC PF_SetPhysicsKeyValue(const edict_t* pEntity, const char* key, const char* value)
 {
-	int entnum = NUM_FOR_EDICT(pClient);
-	if (entnum < 1 || entnum > g_psvs.maxclients)
-		Con_Printf("tried to %s a non-client\n", __func__);
+	int entnum = NUM_FOR_EDICT(pEntity);
 
+#if !USE_BULLET_PHYSICS
+	if (entnum < 1 || entnum > g_psvs.maxclients)
+	{
+		Con_Printf("tried to %s a non-client\n", __func__);
+		return;
+	}
 	client_t* client = &g_psvs.clients[entnum - 1];
 	Info_SetValueForKey(client->physinfo, key, value, MAX_INFO_STRING);
+
+#else
+	if (entnum < 1)
+	{
+		Con_Printf("tried to %s with invalid entity index %d\n", __func__, entnum);
+		return;
+	}
+
+	if (entnum > g_psvs.maxclients)
+	{
+		if (pEntity->v.movetype != MOVETYPE_BULLETPHYSICS)
+		{
+			Con_Printf("%s: Entity %d (%s) is not using MOVETYPE_BULLETPHYSICS (movetype %d). Skipping key '%s'.\n",
+				__func__,
+				entnum,
+				STRING(pEntity->v.classname),
+				pEntity->v.movetype,
+				key
+			);
+			return;
+		}
+
+		BulletWorld::Instance().SetPhysicsKeyValue(pEntity, key, value);
+	}
+	else
+	{
+		client_t* client = &g_psvs.clients[entnum - 1];
+		Info_SetValueForKey(client->physinfo, key, value, MAX_INFO_STRING);
+	}
+#endif
 }
+
 
 int EXT_FUNC PF_GetCurrentPlayer(void)
 {

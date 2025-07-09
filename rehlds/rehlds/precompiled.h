@@ -54,3 +54,10 @@
 
 #include "dlls/cdll_dll.h"
 #include "hltv.h"
+
+#if USE_BULLET_PHYSICS
+
+#include "BulletWorld.h"
+#include "BulletUtils.h"
+
+#endif;

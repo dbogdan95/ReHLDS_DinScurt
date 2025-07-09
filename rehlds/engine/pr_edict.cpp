@@ -538,6 +538,9 @@ void EXT_FUNC FreeEntPrivateData(edict_t *pEdict)
 
 		Mem_Free(pEdict->pvPrivateData);
 		pEdict->pvPrivateData = 0;
+#if USE_BULLET_PHYSICS
+		BulletWorld::Instance().RemoveRigidBody(pEdict);
+#endif
 	}
 }
 

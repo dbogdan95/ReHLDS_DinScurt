@@ -1249,6 +1249,52 @@ void SV_Physics_Bounce(edict_t *ent)
 	SV_CheckWaterTransition(ent);
 }
 
+void SV_Physics_Bullet(edict_t* ent)
+{
+	int entIndex = NUM_FOR_EDICT(ent);
+
+	BulletWorld& bulletWorld = BulletWorld::Instance();
+	BulletEntity* bulletEntity = bulletWorld.GetEntity(ent);
+
+	if (!bulletEntity)
+		return;
+
+	btRigidBody* body = bulletEntity->rigidBody;
+	if (!body || body->isStaticOrKinematicObject())
+		return;
+
+	const btTransform& transform = body->getWorldTransform();
+
+	const btVector3& origin = transform.getOrigin();
+
+	ent->v.origin[0] = origin.getX() * 32.0f; // Bullet = meter, GoldSrc = inch (~1 unit = 1.0 inch)
+	ent->v.origin[1] = origin.getY() * 32.0f;
+	ent->v.origin[2] = origin.getZ() * 32.0f;
+
+	Con_Printf("calling SV_Physics_Bullet for %d position: %f %f %f\n", entIndex, ent->v.origin[0], ent->v.origin[1], ent->v.origin[2]);
+
+
+	//btVector3 eulerAngles;
+	//MatrixToEuler(transform.getBasis(), eulerAngles);
+
+	//ent->v.angles[0] = eulerAngles.getX();
+	//ent->v.angles[1] = eulerAngles.getY();
+	//ent->v.angles[2] = eulerAngles.getZ();
+
+	//const btVector3& vel = body->getLinearVelocity();
+	//ent->v.velocity[0] = vel.getX() * 32.0f;
+	//ent->v.velocity[1] = vel.getY() * 32.0f;
+	//ent->v.velocity[2] = vel.getZ() * 32.0f;
+
+	//const btVector3& avel = body->getAngularVelocity(); // rad/s
+	//ent->v.avelocity[0] = -avel.getY() * SIMD_DEGS_PER_RAD;
+	//ent->v.avelocity[1] = avel.getZ() * SIMD_DEGS_PER_RAD;
+	//ent->v.avelocity[2] = avel.getX() * SIMD_DEGS_PER_RAD;
+
+	SV_LinkEdict(ent, TRUE);
+}
+
+
 void PF_WaterMove(edict_t *pSelf)
 {
 	if (pSelf->v.movetype == MOVETYPE_NOCLIP)
@@ -1487,6 +1533,10 @@ void SV_Physics()
 	gGlobalVariables.time = g_psv.time;
 	gEntityInterface.pfnStartFrame();
 
+#if USE_BULLET_PHYSICS
+	BulletWorld::Instance().StepSimulation(host_frametime);
+#endif
+
 	// treat each object in turn
 	for (int i = 0; i < g_psv.num_edicts; i++)
 	{
@@ -1537,6 +1587,11 @@ void SV_Physics()
 		case MOVETYPE_FLYMISSILE:
 			SV_Physics_Bounce(ent);
 			break;
+#if USE_BULLET_PHYSICS
+		case MOVETYPE_BULLETPHYSICS:
+			SV_Physics_Bullet(ent);
+			break;
+#endif
 		default:
 			Sys_Error("%s: %s bad movetype %d", __func__, &pr_strings[ent->v.classname], ent->v.movetype);
 		}
